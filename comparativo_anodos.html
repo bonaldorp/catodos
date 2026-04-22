@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparativo de Materiais Anódicos</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e8e8e8; min-height: 100vh; padding: 24px; }
+  h1 { font-size: 20px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .btn { background: transparent; border: 1px solid #333; border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer; color: #aaa; transition: all 0.15s; }
+  .btn:hover { border-color: #555; color: #ddd; }
+  .btn.active { background: #1a3a5c; color: #5ab4f0; border-color: #1e4d7a; font-weight: 500; }
+  .btn-sm { font-size: 12px; padding: 5px 11px; border-radius: 6px; }
+  .legend-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: #555; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .badge { display: inline-block; font-size: 10px; padding: 1px 7px; border-radius: 10px; margin-left: 3px; vertical-align: middle; }
+  .badge-com    { background: #0d2e1a; color: #4ade80; border: 1px solid #166534; }
+  .badge-ng     { background: #2d1e05; color: #fbbf24; border: 1px solid #78350f; }
+  .badge-future { background: #2d0d0d; color: #f87171; border: 1px solid #7f1d1d; }
+  .badge-br     { background: #0d2e1a; color: #4ade80; border: 1px solid #166534; }
+  .note-box { background: #14141e; border-left: 3px solid #1e4d7a; border-radius: 0 8px 8px 0; padding: 8px 14px; font-size: 12px; color: #777; margin-bottom: 14px; line-height: 1.7; display: none; }
+  .bar-wrap { display: flex; align-items: center; gap: 10px; padding: 5px 6px; border-radius: 8px; cursor: pointer; transition: background 0.1s; margin-bottom: 6px; }
+  .bar-wrap:hover { background: #1a1a2a; }
+  .bar-wrap.sel { background: #1a1a2a; }
+  .bar-label { font-size: 12px; font-weight: 500; color: #ddd; min-width: 88px; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; line-height: 1.4; }
+  .bar-track { flex: 1; background: #1e1e2e; border-radius: 4px; height: 26px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 500; transition: width 0.5s ease; white-space: nowrap; }
+  .bar-val { font-size: 12px; font-weight: 600; min-width: 80px; text-align: right; }
+  .detail-card { background: #14141e; border-radius: 12px; padding: 16px; margin-top: 16px; border: 1px solid #222; }
+  .detail-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .dot-big { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .detail-name { font-size: 15px; font-weight: 500; color: #fff; }
+  .detail-sub { font-size: 12px; color: #666; margin-top: 3px; }
+  .prop-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1e1e1e; font-size: 13px; color: #ccc; }
+  .prop-row:last-child { border-bottom: none; }
+  .prop-key { color: #555; }
+  .chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; }
+  .chip-green { background: #0d2e1a; color: #4ade80; }
+  .chip-amber { background: #2d1e05; color: #fbbf24; }
+  .chip-red   { background: #2d0d0d; color: #f87171; }
+  .trl-bar { display: flex; gap: 3px; }
+  .trl-dot { width: 13px; height: 13px; border-radius: 2px; }
+  .detail-notes { font-size: 12px; color: #555; margin-top: 10px; line-height: 1.7; }
+  .hint { font-size: 11px; color: #333; margin-top: 16px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Comparativo de Materiais Anódicos</h1>
+<p class="subtitle">Clique em uma barra para ver detalhes · Alterne entre métricas nos botões acima</p>
+
+<div class="controls" id="tabs">
+  <button class="btn active" onclick="setMode('autonomia',this)">Autonomia (base 40 km)</button>
+  <button class="btn" onclick="setMode('capacidade',this)">Capacidade (mAh/g)</button>
+  <button class="btn" onclick="setMode('ciclos',this)">Vida útil (ciclos)</button>
+  <button class="btn" onclick="setMode('crate',this)">Velocidade de carga (C-rate)</button>
+</div>
+
+<div id="crate-note" class="note-box">
+  C-rate indica quantas vezes a capacidade pode ser carregada por hora.<br>
+  20C = ~3 min &nbsp;·&nbsp; 10C = ~6 min &nbsp;·&nbsp; 5C = ~12 min &nbsp;·&nbsp; 2C = 30 min &nbsp;·&nbsp; 1C = 60 min<br>
+  Niobatos trocam energia por velocidade — essa é a proposta de valor deles.
+</div>
+
+<div class="controls" id="genbtns" style="margin-bottom:14px;">
+  <span style="font-size:12px;color:#555;align-self:center;">Filtrar:</span>
+  <button class="btn btn-sm active" onclick="setGen('todos',this)">Todos</button>
+  <button class="btn btn-sm" onclick="setGen('atual',this)">Comercial hoje</button>
+  <button class="btn btn-sm" onclick="setGen('nextgen',this)">Próxima geração</button>
+</div>
+
+<div class="legend-row">
+  <div class="legend-item"><span class="badge badge-com">comercial</span> Larga escala</div>
+  <div class="legend-item"><span class="badge badge-ng">próx. geração</span> Piloto / emergente</div>
+  <div class="legend-item"><span class="badge badge-future">futuro</span> P&D</div>
+  <div class="legend-item"><span class="badge badge-br">🇧🇷 BR</span> Produção no Brasil</div>
+</div>
+
+<div id="chart"></div>
+<div id="detail"></div>
+<p class="hint">Autonomia estimada com base no impacto relativo no nível de célula vs grafite como referência (40 km).<br>Niobatos operam em tensão mais alta vs Li, o que reduz a tensão da célula mas garante segurança e carga ultrarrápida.</p>
+
+<script>
+const M = [
+  {
+    id:'lto', name:'LTO', full:'Lítio Titanato (Li₄Ti₅O₁₂)',
+    capacity:165, cycles:20000, crate:10, autonomiaGain:-0.58,
+    safety:5, trl:9, gen:'atual', color:'#378ADD', br:false,
+    notes:'O ânodo mais seguro e durável disponível comercialmente. Alta tensão vs Li (~1,55V) reduz a energia da célula, mas elimina risco de dendrita de lítio. Toshiba SCiB™ é a referência global. Ideal para aplicações que priorizam vida longa e segurança acima de autonomia.'
+  },
+  {
+    id:'nb2o5', name:'Nb₂O₅', full:'Pentóxido de Nióbio',
+    capacity:200, cycles:5000, crate:10, autonomiaGain:-0.42,
+    safety:5, trl:5, gen:'nextgen', color:'#1D9E75', br:false,
+    notes:'Material base da família dos niobatos. Alta mobilidade de Li⁺ permite carga rápida sem formação de SEI. Tensão de trabalho ~1,6V vs Li. A CBMM (Brasil) é o maior produtor mundial de nióbio e financia pesquisa global em Nb₂O₅ para baterias.'
+  },
+  {
+    id:'wno', name:'WNO', full:'Óxido Nióbio-Tungstênio (Nb-W-O)',
+    capacity:190, cycles:10000, crate:20, autonomiaGain:-0.38,
+    safety:5, trl:6, gen:'nextgen', color:'#7F77DD', br:false,
+    notes:'Estrutura Wadsley-Roth com túneis de difusão excepcionalmente largos para Li⁺. C-rate máximo de 20C (carga em ~3 min). Nyobolt promete carga de 90% em menos de 5 min em células de 35 kWh. Partículas micrométricas já têm alto desempenho — sem necessidade de nanoestruturação.'
+  },
+  {
+    id:'xno', name:'XNO', full:'Óxido de Nióbio Misto (Mixed NbO — Echion)',
+    capacity:240, cycles:10000, crate:10, autonomiaGain:-0.28,
+    safety:5, trl:7, gen:'nextgen', color:'#639922', br:true,
+    notes:'Material proprietário da Echion Technologies (Cambridge, UK). Planta de 2.000 t/ano inaugurada em novembro de 2024 no Brasil em parceria com CBMM — primeira planta industrial de material anódico de nióbio do mundo. Leclanché lançou célula XN50 com XNO em set/2024: +50% energia vs LTO e mais de 10.000 ciclos.'
+  },
+  {
+    id:'nto', name:'NTO', full:'Niobato de Titânio (TiNb₂O₇)',
+    capacity:279, cycles:5000, crate:10, autonomiaGain:-0.30,
+    safety:5, trl:6, gen:'nextgen', color:'#BA7517', br:false,
+    notes:'TiNb₂O₇ combina capacidade similar ao grafite (~387 mAh/g teórico) com carga ultrarrápida. Toshiba lançou SCiB Nb com NTO em junho de 2025: carga de 80% em 10 min, 15.000 ciclos, operação de -30°C a +60°C. Densidade volumétrica superior ao grafite pela maior densidade cristalina (4,33 g/cm³).'
+  },
+  {
+    id:'grafite', name:'Grafite', full:'Grafite (carbono lamelar)',
+    capacity:360, cycles:1500, crate:2, autonomiaGain:0,
+    safety:3, trl:9, gen:'atual', color:'#888780', br:false,
+    notes:'Referência universal — presente em ~95% de todas as baterias Li-ion comerciais. Tensão baixa vs Li (~0,17V) maximiza a tensão da célula. Limitado pela intercalação lenta em altas correntes (risco de plating de lítio acima de 2C). Grafite artificial premium domina EVs.'
+  },
+  {
+    id:'grsi5', name:'Grafite+Si 5%', full:'Compósito Grafite-Silício (5% Si)',
+    capacity:420, cycles:1200, crate:2, autonomiaGain:0.08,
+    safety:3, trl:9, gen:'atual', color:'#534AB7', br:false,
+    notes:'Primeira geração de ânodos com silício adicionado ao grafite. A expansão volumétrica do Si (~300%) é parcialmente gerenciada em baixas concentrações. Já em produção em massa — Panasonic, Samsung SDI e CATL usam composições similares. Pequeno ganho de energia com alta compatibilidade industrial.'
+  },
+  {
+    id:'swcnt', name:'SWCNT', full:'Nanotubos de Carbono Parede Simples (SWCNT)',
+    capacity:500, cycles:2000, crate:5, autonomiaGain:0.28,
+    safety:4, trl:4, gen:'nextgen', color:'#185FA5', br:false,
+    notes:'Nanotubos de parede simples usados como ânodo puro. Estrutura oca e alta área superficial permitem armazenamento de Li por intercalação e adsorção. Capacidade prática ~500 mAh/g. Uso mais impactante hoje: aditivo condutor em ânodos de Si/grafite, onde pontes flexíveis de SWCNT preservam contato elétrico mesmo com expansão volumétrica severa do silício.'
+  },
+  {
+    id:'grsi15', name:'Grafite+Si 15%', full:'Compósito Grafite-Silício (15% Si)',
+    capacity:550, cycles:800, crate:1, autonomiaGain:0.22,
+    safety:2, trl:7, gen:'nextgen', color:'#D85A30', br:false,
+    notes:'Segunda geração com maior teor de Si. Group14 Technologies comercializa SCC55™ (Si-carbono) com +50% de energia vs grafite puro — entregando para mais de 100 fabricantes desde set/2024. Sila Nanotechnologies usa Si nanocompósito no Whoop 4.0 e em parceria com BMW.'
+  },
+  {
+    id:'mwcnt', name:'MWCNT dopado', full:'Nanotubos Multi-Parede Dopados (N/B-MWCNT)',
+    capacity:600, cycles:5000, crate:8, autonomiaGain:0.35,
+    safety:4, trl:3, gen:'nextgen', color:'#3C3489', br:false,
+    notes:'MWCNTs com dopagem de nitrogênio e/ou boro criam defeitos estruturais que ampliam os sítios de intercalação de Li⁺. Capacidade ~600 mAh/g com retenção excelente em 5.000 ciclos e operação em densidades de corrente muito elevadas (~67 A/g). A LG Chem expandiu produção de MWCNT para 6.200 t/ano em 2024, principalmente como aditivo condutor.'
+  },
+  {
+    id:'grafeno', name:'Grafeno', full:'Grafeno (folha monoatômica de carbono)',
+    capacity:744, cycles:3000, crate:5, autonomiaGain:0.40,
+    safety:4, trl:3, gen:'nextgen', color:'#0F6E56', br:false,
+    notes:'Capacidade teórica de 744 mAh/g (ambos os lados da folha). Alta área superficial e condutividade excepcional. Custo de produção em escala ainda proibitivo. Mais promissor como aditivo condutor em compósitos Si/grafeno do que como ânodo puro. Pesquisa ativa para redução de custo.'
+  },
+  {
+    id:'li_metal', name:'Li metálico', full:'Lítio metálico (ânodo de Li puro)',
+    capacity:3860, cycles:300, crate:0.3, autonomiaGain:1.0,
+    safety:1, trl:4, gen:'nextgen', color:'#E24B4A', br:false,
+    notes:'Capacidade teórica máxima: 3860 mAh/g. Dobra a autonomia vs grafite. O maior desafio é a formação de dendritas de lítio que causam curto-circuito. Viável apenas em baterias de estado sólido que suprimem dendritas mecanicamente. Toyota, Samsung SDI e QuantumScape apostam nisso para pós-2027.'
+  },
+];
+
+let mode='autonomia', genFilter='todos', selected=null;
+
+function setMode(m,el){
+  mode=m;
+  document.querySelectorAll('#tabs .btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('crate-note').style.display=m==='crate'?'block':'none';
+  render();
+}
+function setGen(g,el){
+  genFilter=g;
+  document.querySelectorAll('#genbtns .btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function getVal(m){
+  if(mode==='autonomia') return Math.round(40*(1+m.autonomiaGain));
+  if(mode==='capacidade') return m.capacity;
+  if(mode==='ciclos') return m.cycles;
+  return m.crate;
+}
+function getUnit(){
+  if(mode==='autonomia') return 'km';
+  if(mode==='capacidade') return 'mAh/g';
+  if(mode==='ciclos') return 'ciclos';
+  return 'C';
+}
+function trlLabel(n){
+  if(n>=9) return '<span class="badge badge-com">comercial</span>';
+  if(n>=7) return '<span class="badge badge-com">comercial emergente</span>';
+  if(n>=5) return '<span class="badge badge-ng">próx. geração</span>';
+  return '<span class="badge badge-future">futuro / P&D</span>';
+}
+function trlBar(n){
+  let s='<div class="trl-bar">';
+  for(let i=1;i<=9;i++){
+    const c=i<=n?(n>=7?'#4ade80':n>=5?'#fbbf24':'#f87171'):'#222';
+    s+=`<div class="trl-dot" style="background:${c};"></div>`;
+  }
+  return s+'</div>';
+}
+function safetyLabel(n){
+  if(n>=5) return '<span class="chip chip-green">Excelente</span>';
+  if(n>=4) return '<span class="chip chip-green">Muito boa</span>';
+  if(n>=3) return '<span class="chip chip-amber">Boa</span>';
+  if(n>=2) return '<span class="chip chip-amber">Moderada</span>';
+  return '<span class="chip chip-red">Limitada</span>';
+}
+function crateLabel(c){
+  if(c>=20) return '<span class="chip chip-green">~3 min (20C)</span>';
+  if(c>=10) return '<span class="chip chip-green">~6 min (10C)</span>';
+  if(c>=5)  return '<span class="chip chip-amber">~12 min (5C)</span>';
+  if(c>=2)  return '<span class="chip chip-amber">~30 min (2C)</span>';
+  if(c>=1)  return '<span class="chip chip-amber">~60 min (1C)</span>';
+  return '<span class="chip chip-red">>2h (0,3C)</span>';
+}
+function genBadgeOf(m){
+  if(m.trl>=7) return '';
+  if(m.trl>=5) return '<span class="badge badge-ng" style="font-size:10px;">próx. gen.</span>';
+  return '<span class="badge badge-future" style="font-size:10px;">futuro</span>';
+}
+
+function render(){
+  const filtered = genFilter==='todos' ? M :
+    genFilter==='atual' ? M.filter(x=>x.gen==='atual') :
+    M.filter(x=>x.gen==='nextgen');
+  const sorted = [...filtered].sort((a,b)=>getVal(b)-getVal(a));
+  const max = Math.max(...sorted.map(getVal));
+  let html='';
+  sorted.forEach(m=>{
+    const val=getVal(m);
+    const pct=Math.round((val/max)*100);
+    const isBase=m.id==='grafite'&&mode==='autonomia';
+    const isSel=selected===m.id;
+    const brBadge=m.br?'<span class="badge badge-br" style="font-size:10px;">🇧🇷</span>':'';
+    html+=`
+      <div class="bar-wrap${isSel?' sel':''}" onclick="selectMat('${m.id}')">
+        <div class="bar-label">${m.name}${genBadgeOf(m)}${brBadge}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${m.color}22;color:${m.color};">
+            ${isBase?'← grafite (base)':''}
+          </div>
+        </div>
+        <div class="bar-val" style="color:${m.color};">${val.toLocaleString()} ${getUnit()}</div>
+      </div>`;
+  });
+  document.getElementById('chart').innerHTML=html;
+  if(selected && filtered.find(x=>x.id===selected)){
+    renderDetail(M.find(x=>x.id===selected));
+  } else {
+    document.getElementById('detail').innerHTML='';
+  }
+}
+
+function selectMat(id){
+  selected=id; render();
+  renderDetail(M.find(x=>x.id===id));
+}
+
+function renderDetail(m){
+  const gainText=m.autonomiaGain>0
+    ?`+${Math.round(m.autonomiaGain*100)}% vs grafite`
+    :m.autonomiaGain===0?'referência base'
+    :`${Math.round(m.autonomiaGain*100)}% vs grafite`;
+  document.getElementById('detail').innerHTML=`
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="dot-big" style="background:${m.color};"></div>
+        <div>
+          <div class="detail-name">${m.name} — ${m.full}</div>
+          <div class="detail-sub">${gainText} &nbsp;·&nbsp; TRL ${m.trl}/9 &nbsp;${trlLabel(m.trl)}${m.br?'&nbsp;<span class="badge badge-br">🇧🇷 prod. no Brasil</span>':''}</div>
+        </div>
+      </div>
+      <div class="prop-row"><span class="prop-key">Capacidade prática</span><span>${m.capacity} mAh/g</span></div>
+      <div class="prop-row"><span class="prop-key">Impacto na autonomia (base 40 km)</span><span>${Math.round(40*(1+m.autonomiaGain))} km</span></div>
+      <div class="prop-row"><span class="prop-key">Vida útil estimada</span><span>${m.cycles.toLocaleString()} ciclos</span></div>
+      <div class="prop-row"><span class="prop-key">Velocidade máx de carga</span>${crateLabel(m.crate)}</div>
+      <div class="prop-row"><span class="prop-key">Segurança</span>${safetyLabel(m.safety)}</div>
+      <div class="prop-row"><span class="prop-key">Maturidade (TRL)</span>${trlBar(m.trl)}</div>
+      <p class="detail-notes">${m.notes}</p>
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
