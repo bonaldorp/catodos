@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combinações Ânodo + Cátodo — Motocicleta</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e8e8e8;
+    height: 100vh;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 16px 20px;
+  }
+  .left { display: flex; flex-direction: column; gap: 5px; min-height: 0; }
+  .right { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+  .title { font-size: 15px; font-weight: 500; color: #fff; flex-shrink: 0; }
+  .base  { font-size: 9px; color: #444; flex-shrink: 0; }
+  .ctrl-row { display: flex; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
+  .btn {
+    background: #1a1a2e; border: 1px solid #2a2a3e; border-radius: 5px;
+    padding: 4px 10px; font-size: 10px; cursor: pointer; color: #777;
+    transition: all 0.12s; white-space: nowrap;
+  }
+  .btn:hover { color: #ccc; border-color: #444; }
+  .btn.active { background: #1a3a5c; color: #5ab4f0; border-color: #1e4d7a; font-weight: 600; }
+  .btn-xs { font-size: 9px; padding: 3px 8px; }
+  .hint { font-size: 9px; color: #3a3a5a; line-height: 1.5; flex-shrink: 0; }
+  .divider { height: 1px; background: #1a1a2a; flex-shrink: 0; }
+  .bars { flex: 1; overflow-y: auto; padding-right: 2px; min-height: 0; }
+  .bars::-webkit-scrollbar { width: 3px; }
+  .bars::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+  .bar-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 3px 5px; border-radius: 5px; cursor: pointer;
+    margin-bottom: 3px; transition: background 0.1s;
+  }
+  .bar-item:hover { background: #1a1a2a; }
+  .bar-item.sel { background: #1c1c2e; outline: 1px solid #2a2a4a; }
+  .bar-name { font-size: 10px; color: #bbb; font-weight: 500; min-width: 136px; line-height: 1.3; }
+  .bar-outer { flex: 1; background: #1e1e2e; border-radius: 3px; height: 14px; overflow: hidden; }
+  .bar-inner { height: 100%; border-radius: 3px; }
+  .bar-num { font-size: 10px; font-weight: 600; min-width: 62px; text-align: right; }
+  .tbadge { display: inline-block; font-size: 8px; padding: 1px 4px; border-radius: 5px; margin-left: 2px; vertical-align: middle; }
+  .empty {
+    flex: 1; height: 100%; display: flex; align-items: center;
+    justify-content: center; color: #2a2a3a; font-size: 11px;
+    border: 1px dashed #1e1e2e; border-radius: 8px;
+  }
+  .dcard {
+    background: #14141e; border-radius: 8px; border: 1px solid #222;
+    padding: 12px; display: flex; flex-direction: column; gap: 7px;
+    height: 100%; overflow-y: auto;
+  }
+  .dcard::-webkit-scrollbar { width: 3px; }
+  .dcard::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+  .dhead { display: flex; align-items: flex-start; gap: 8px; }
+  .ddot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .dname { font-size: 12px; font-weight: 500; color: #fff; }
+  .dsub { font-size: 10px; color: #555; margin-top: 2px; }
+  .mgrid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 4px; }
+  .mcard { background: #1a1a2a; border-radius: 5px; padding: 5px 3px; text-align: center; border: 1px solid #1e1e2e; }
+  .mval { font-size: 12px; font-weight: 500; }
+  .mlbl { font-size: 8px; color: #444; margin-top: 1px; }
+  .cgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .prow { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; border-bottom: 1px solid #1a1a2a; font-size: 10px; color: #aaa; }
+  .prow:last-child { border-bottom: none; }
+  .pk { color: #444; }
+  .chip { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
+  .cg { background: #0d2e1a; color: #4ade80; }
+  .ca { background: #2d1e05; color: #fbbf24; }
+  .cr { background: #2d0d0d; color: #f87171; }
+  .cb { background: #0d1e3a; color: #5ab4f0; }
+  .cp { background: #1e0d2e; color: #c084fc; }
+  .radar-wrap { position: relative; height: 140px; }
+  .dnotes { font-size: 9px; color: #555; line-height: 1.6; border-top: 1px solid #1a1a2a; padding-top: 6px; }
+  .nbr { font-size: 9px; color: #4ade80; background: #0d2e1a; border-radius: 4px; padding: 5px 8px; border: 1px solid #166534; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="left">
+  <div class="title">Combinações Ânodo + Cátodo — Motocicleta</div>
+  <div class="base">Base: LFP + Grafite = 40 km · Clique para ver detalhes</div>
+
+  <div class="ctrl-row" id="tabs">
+    <button class="btn active" onclick="setMode('score',this)">Score moto</button>
+    <button class="btn" onclick="setMode('autonomia',this)">Autonomia</button>
+    <button class="btn" onclick="setMode('density',this)">Wh/kg</button>
+    <button class="btn" onclick="setMode('ciclos',this)">Ciclos</button>
+    <button class="btn" onclick="setMode('crate',this)">C-rate</button>
+  </div>
+
+  <div class="ctrl-row" id="fils">
+    <button class="btn btn-xs active" onclick="setFil('todas',this)">Todas</button>
+    <button class="btn btn-xs" onclick="setFil('Delivery',this)">Urbana / Delivery</button>
+    <button class="btn btn-xs" onclick="setFil('Commuter',this)">Commuter</button>
+    <button class="btn btn-xs" onclick="setFil('Sport',this)">Sport / Touring</button>
+    <button class="btn btn-xs" onclick="setFil('Fast Charge',this)">Fast Charge</button>
+  </div>
+
+  <div class="hint">Score: energia/peso 25% · segurança 25% · durabilidade 20% · custo 20% · carga rápida 10%</div>
+  <div class="divider"></div>
+  <div class="bars" id="chart"></div>
+</div>
+
+<div class="right">
+  <div id="detail"><div class="empty">← selecione uma combinação</div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TC = {
+  'Delivery':    ['#0d1e3a','#5ab4f0'],
+  'Commuter':    ['#0d2e1a','#4ade80'],
+  'Sport':       ['#2d1e05','#fbbf24'],
+  'Fast Charge': ['#2d0d0d','#f87171'],
+};
+
+const C = [
+  // DELIVERY
+  { id:'lfp_lto',        label:'LFP + LTO',              cat:'LFP',     ano:'LTO',           tipo:'Delivery',    density:90,  auto:23, cyc:15000,saf:5,cost:4,cr:10,trl:9, color:'#378ADD',
+    notes:'Ultra-segura para frotas de delivery. 15.000 ciclos = mais de 40 anos de uso diário. Carga em ~6 min. Ideal onde tempo parado tem custo direto.',
+    nbr:'Excelente para clima tropical. LTO não degrada com calor. Sem risco de thermal runaway.' },
+  { id:'lfp_xno',        label:'LFP + XNO',               cat:'LFP',     ano:'XNO',           tipo:'Delivery',    density:120, auto:30, cyc:4000, saf:5,cost:3,cr:10,trl:7, color:'#1D9E75',
+    notes:'Segurança máxima com carga ultrarrápida. XNO produzido no Brasil (CBMM + Echion, nov/2024). Leclanché XN50 disponível comercialmente.',
+    nbr:'Material produzido no Brasil pela CBMM + Echion. Cadeia nacional em desenvolvimento.' },
+
+  // FAST CHARGE
+  { id:'lmfp_nto',       label:'LMFP + NTO',              cat:'LMFP',    ano:'NTO',           tipo:'Fast Charge', density:140, auto:35, cyc:3000, saf:5,cost:3,cr:10,trl:6, color:'#BA7517',
+    notes:'Segurança do LMFP com carga ultrarrápida do NTO. Toshiba SCiB Nb: 80% em 10 min, 15.000 ciclos, -30°C a +60°C.',
+    nbr:'Boa resistência a altas temperaturas — relevante no clima brasileiro.' },
+  { id:'nmc622_nto',     label:'NMC 622 + NTO',            cat:'NMC 622', ano:'NTO',           tipo:'Fast Charge', density:170, auto:43, cyc:1500, saf:3,cost:2,cr:10,trl:6, color:'#D85A30',
+    notes:'Autonomia razoável com carga em ~10 min. Combinação next-gen em fase de comercialização.',
+    nbr:'NMC 622 requer gestão térmica ativa. Atenção em climas quentes.' },
+  { id:'lfp_nb2o5',      label:'LFP + Nb₂O₅',             cat:'LFP',     ano:'Nb₂O₅',         tipo:'Fast Charge', density:130, auto:32, cyc:5000, saf:5,cost:3,cr:10,trl:5, color:'#34d399',
+    notes:'Segurança máxima com 5.000 ciclos e carga em ~6 min. Tensão de operação mais alta (~1,6V vs Li) reduz autonomia vs grafite, mas a combinação é ultra-segura e durável. CBMM Brasil é o maior produtor mundial de nióbio.',
+    nbr:'Alta relevância no Brasil — CBMM (Araxá, MG) produz 72% do nióbio mundial. Cadeia local em desenvolvimento.' },
+  { id:'lmfp_nb2o5',     label:'LMFP + Nb₂O₅',            cat:'LMFP',    ano:'Nb₂O₅',         tipo:'Fast Charge', density:155, auto:38, cyc:4000, saf:5,cost:3,cr:10,trl:5, color:'#10b981',
+    notes:'LMFP compensa parcialmente a tensão mais alta do ânodo Nb₂O₅. Célula segura com 4.000 ciclos e carga rápida em ~6 min. Boa opção para commuter com foco em longevidade.',
+    nbr:'Combinação promissora para o Brasil — segurança tropical + nióbio nacional. Em P&D aplicado.' },
+  { id:'nmc622_nb2o5',   label:'NMC 622 + Nb₂O₅',          cat:'NMC 622', ano:'Nb₂O₅',         tipo:'Fast Charge', density:175, auto:43, cyc:2500, saf:3,cost:2,cr:10,trl:5, color:'#059669',
+    notes:'Melhor autonomia entre as combinações com Nb₂O₅ (43 km) com carga ultrarrápida a 10C. 2.500 ciclos adequados para 6-7 anos de uso diário. Requer gestão térmica por conta do NMC.',
+    nbr:'Interessante para motos sport com foco em carga rápida. Gestão térmica obrigatória em climas quentes.' },
+  { id:'lmfp_nb2o5_wno', label:'LMFP + Nb₂O₅/WNO',        cat:'LMFP',    ano:'Nb₂O₅+WNO',     tipo:'Fast Charge', density:160, auto:40, cyc:6000, saf:5,cost:2,cr:20,trl:4, color:'#047857',
+    notes:'Ânodo híbrido Nb₂O₅/WNO com estrutura Wadsley-Roth: C-rate excepcional de 20C (carga em ~3 min). 6.000 ciclos. Nyobolt desenvolve WNO para EVs de 35 kWh. A combinação mais futurista da categoria.',
+    nbr:'Next-gen com nióbio brasileiro. CBMM + Echion já produzem XNO em escala — WNO é o próximo passo.' },
+
+  // COMMUTER
+  { id:'lmo_grafite',    label:'LMO + Grafite',             cat:'LMO',     ano:'Grafite',       tipo:'Commuter',    density:120, auto:32, cyc:1000, saf:4,cost:5,cr:5, trl:8, color:'#EF9F27',
+    notes:'LMO (espinel) tem custo muito baixo e segurança boa, mas ciclos limitados (1.000) e degradação em calor excessivo. Ainda usado em HEVs leves como solução de custo.',
+    nbr:'Não recomendado para motos no Brasil — calor tropical acelera degradação do espinel de Mn.' },
+  { id:'lfp_grafite',    label:'LFP + Grafite',              cat:'LFP',     ano:'Grafite',       tipo:'Commuter',    density:160, auto:40, cyc:2000, saf:4,cost:5,cr:2, trl:9, color:'#888780',
+    notes:'Referência do mercado. Tecnologia madura, segura e de baixo custo. Principal limitante: carga lenta (~30 min em 2C).',
+    nbr:'Tecnologia dominante nas motos elétricas populares no Brasil. Custo mais acessível.' },
+  { id:'lmfp_grafite',   label:'LMFP + Grafite',             cat:'LMFP',    ano:'Grafite',       tipo:'Commuter',    density:185, auto:46, cyc:2000, saf:4,cost:4,cr:2, trl:7, color:'#0F6E56',
+    notes:'Evolução do LFP com ~15% mais autonomia mantendo segurança e longevidade. Principal aposta da CATL para commuters.',
+    nbr:'Segura em clima tropical. Excelente opção para o mercado brasileiro de commuter.' },
+  { id:'lmfp_grsi5',     label:'LMFP + Si/Grafite',          cat:'LMFP',    ano:'Si/Grafite',    tipo:'Commuter',    density:200, auto:50, cyc:1500, saf:4,cost:4,cr:2, trl:7, color:'#639922',
+    notes:'Melhor combinação para commuter premium: segurança do LMFP + capacidade extra do Si/Grafite. Padrão das motos commuter de alto desempenho nos próximos anos.',
+    nbr:'Recomendação top para o Brasil — segura, eficiente e custo razoável.' },
+  { id:'lfp_swcnt',      label:'LFP + SWCNT',                cat:'LFP',     ano:'SWCNT',         tipo:'Commuter',    density:175, auto:44, cyc:2500, saf:4,cost:2,cr:5, trl:4, color:'#c084fc',
+    notes:'SWCNT entrega ~10% mais autonomia vs LFP+Grafite mantendo segurança máxima. C-rate de 5C (~12 min). OCSiAl TUBALL já fornecido a fabricantes em escala como aditivo condutor.',
+    nbr:'Interesse para delivery — segurança do LFP com mais autonomia e carga mais rápida.' },
+  { id:'lmfp_swcnt',     label:'LMFP + SWCNT',               cat:'LMFP',    ano:'SWCNT',         tipo:'Commuter',    density:205, auto:51, cyc:2000, saf:4,cost:2,cr:5, trl:4, color:'#a855f7',
+    notes:'LMFP eleva a tensão de célula (~3,7V) e SWCNT adiciona capacidade e condutividade. Permite ânodos com 20% SiO atingindo até 300 Wh/kg.',
+    nbr:'Próxima geração para commuter premium. Requer gestão térmica básica.' },
+  { id:'lmfp_mwcnt',     label:'LMFP + MWCNT dopado',        cat:'LMFP',    ano:'MWCNT N/B',     tipo:'Commuter',    density:215, auto:54, cyc:3500, saf:4,cost:2,cr:8, trl:3, color:'#9333ea',
+    notes:'MWCNT dopado N/B: capacidade ~600 mAh/g com até 5.000 ciclos. Com LMFP: segurança + durabilidade + carga a 8C (~7 min). LG Chem expandiu produção de MWCNT para 6.200 t/ano em 2024.',
+    nbr:'Combinação mais interessante com CNT para o Brasil — segura, durável e carga rápida.' },
+
+  // SPORT / TOURING
+  { id:'lco_grafite',    label:'LCO + Grafite',              cat:'LCO',     ano:'Grafite',       tipo:'Sport',       density:200, auto:50, cyc:500,  saf:1,cost:1,cr:2, trl:9, color:'#D85A30',
+    notes:'LCO tem alta densidade mas ciclos muito curtos (500) e alto risco de thermal runaway. Custo elevado pelo cobalto. Dominante em eletrônicos, mas inadequado para motos — vida útil de apenas 1-2 anos em uso diário.',
+    nbr:'Não recomendado para motocicletas no Brasil. Risco de incêndio e custo de cobalto elevado.' },
+  { id:'nmc622_grafite', label:'NMC 622 + Grafite',           cat:'NMC 622', ano:'Grafite',       tipo:'Sport',       density:210, auto:52, cyc:1500, saf:3,cost:3,cr:2, trl:9, color:'#7F77DD',
+    notes:'Padrão das motos de médio-alto desempenho. Requer BMS adequado e gestão térmica. Evitar cargas frequentes acima de 80%.',
+    nbr:'Requer resfriamento ativo em climas quentes.' },
+  { id:'nmc622_grsi5',   label:'NMC 622 + Si/Grafite',        cat:'NMC 622', ano:'Si/Grafite',    tipo:'Sport',       density:230, auto:58, cyc:1200, saf:3,cost:3,cr:2, trl:8, color:'#534AB7',
+    notes:'+10% de autonomia vs NMC puro com impacto moderado na durabilidade. Usado em motos premium como Energica.',
+    nbr:'Gestão térmica ativa obrigatória em clima tropical.' },
+  { id:'nmc622_swcnt',   label:'NMC 622 + SWCNT',             cat:'NMC 622', ano:'SWCNT',         tipo:'Sport',       density:240, auto:60, cyc:1800, saf:3,cost:2,cr:5, trl:4, color:'#7c3aed',
+    notes:'Sport touring next-gen. SWCNT preserva contato elétrico mesmo com expansão volumétrica. C-rate de 5C (12 min) vs 2C do grafite puro.',
+    nbr:'Gestão térmica obrigatória. Atraente para motos esportivas premium.' },
+  { id:'nmc622_mwcnt',   label:'NMC 622 + MWCNT dopado',      cat:'NMC 622', ano:'MWCNT N/B',     tipo:'Sport',       density:255, auto:64, cyc:2500, saf:3,cost:2,cr:8, trl:3, color:'#6d28d9',
+    notes:'Alta performance next-gen: 64 km com C-rate de 8C e boa durabilidade. MWCNT dopado compensa a queda de performance do NMC em cargas rápidas.',
+    nbr:'Alta performance com gestão térmica. Para motos sport com carregamento rápido.' },
+  { id:'nmc811_grafite', label:'NMC 811 + Grafite',            cat:'NMC 811', ano:'Grafite',       tipo:'Sport',       density:250, auto:62, cyc:1200, saf:2,cost:2,cr:2, trl:9, color:'#D4537E',
+    notes:'Alta autonomia para esportivas. Exige BMS sofisticado e gestão térmica robusta. Custo elevado e vida útil menor vs NMC 622.',
+    nbr:'Risco de degradação sem resfriamento ativo. Uso restrito no Brasil.' },
+  { id:'nca_grafite',    label:'NCA + Grafite',                cat:'NCA',     ano:'Grafite',       tipo:'Sport',       density:265, auto:66, cyc:1200, saf:2,cost:2,cr:2, trl:9, color:'#885FAD',
+    notes:'Alta performance. Excelente energia específica. Sensível à temperatura — requer gestão térmica ativa em climas tropicais.',
+    nbr:'Não recomendado no Brasil sem resfriamento ativo. Risco de degradação prematura.' },
+  { id:'nmc811_grsi5',   label:'NMC 811 + Si/Grafite',         cat:'NMC 811', ano:'Si/Grafite',    tipo:'Sport',       density:270, auto:67, cyc:1000, saf:2,cost:2,cr:2, trl:8, color:'#993556',
+    notes:'Máxima autonomia entre combinações comerciais. Complexidade elevada — carregador inteligente obrigatório.',
+    nbr:'Resfriamento obrigatório. Uso restrito a aplicações premium no Brasil.' },
+  { id:'lno_grafite',    label:'LiNiO₂ + Grafite',             cat:'LiNiO₂',  ano:'Grafite',       tipo:'Sport',       density:280, auto:70, cyc:800,  saf:1,cost:2,cr:2, trl:5, color:'#fb923c',
+    notes:'LiNiO₂ tem a maior densidade dos óxidos lamelares, mas instabilidade térmica severa e mistura Li/Ni causam degradação rápida (800 ciclos). Pesquisa com dopagem de W, Al e Mg para estabilizar.',
+    nbr:'Inviável para uso tropical sem resfriamento ativo e BMS avançado. Risco de thermal runaway.' },
+  { id:'llo_grafite',    label:'Li-rich (LLO) + Grafite',      cat:'Li-rich',  ano:'Grafite',       tipo:'Sport',       density:300, auto:75, cyc:600,  saf:2,cost:3,cr:2, trl:4, color:'#f97316',
+    notes:'Usa redox aniônico do O²⁻ — até 20% mais denso que NMC convencional. Autonomia de 75 km. Desafio crítico: voltage fade ao longo dos ciclos. POSTECH e CATL avançando na supressão de O₂.',
+    nbr:'Tecnologia de P&D. Ciclos insuficientes para uso em moto no Brasil hoje.' },
+  { id:'drx_grafite',    label:'DRX + Grafite',                 cat:'DRX',      ano:'Grafite',       tipo:'Sport',       density:320, auto:80, cyc:400,  saf:3,cost:4,cr:2, trl:3, color:'#ef4444',
+    notes:'Sal-de-rocha desordenado sem Co/Ni — base de Mn e Ti. Maior densidade de todos. Publicado em Nature Energy 2023-2024. Ciclagem ainda muito limitada para aplicação em moto.',
+    nbr:'P&D puro. Referência de pesquisa futura — sem horizonte comercial definido.' },
+];
+
+function calcScore(m) {
+  const dn=Math.min(m.density/300*10,10),sn=m.saf*2,cn=Math.min(m.cyc/3000*10,10),co=m.cost*2,cr=Math.min(m.cr,10);
+  return Math.round((dn*0.25+sn*0.25+cn*0.20+co*0.20+cr*0.10)*10)/10;
+}
+C.forEach(m=>m.score=calcScore(m));
+
+let mode='score',fil='todas',sel=null,rc=null;
+
+function setMode(m,el){mode=m;document.querySelectorAll('#tabs .btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
+function setFil(f,el){fil=f;document.querySelectorAll('#fils .btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');render();}
+function gv(m){if(mode==='score')return m.score;if(mode==='autonomia')return m.auto;if(mode==='density')return m.density;if(mode==='ciclos')return m.cyc;return m.cr;}
+function gu(){if(mode==='score')return '/10';if(mode==='autonomia')return 'km';if(mode==='density')return 'Wh/kg';if(mode==='ciclos')return 'ciclos';return 'C';}
+function tb(t){const[bg,co]=TC[t]||['#222','#888'];return`<span class="tbadge" style="background:${bg};color:${co};">${t}</span>`;}
+function cc(c){if(c>=20)return`<span class="chip cg">${c}C ~3 min</span>`;if(c>=10)return`<span class="chip cg">${c}C ~6 min</span>`;if(c>=8)return`<span class="chip cg">${c}C ~7 min</span>`;if(c>=5)return`<span class="chip ca">${c}C ~12 min</span>`;return`<span class="chip ca">${c}C ~30 min</span>`;}
+function sc(n){if(n>=5)return'<span class="chip cg">Excelente</span>';if(n>=4)return'<span class="chip cg">Muito boa</span>';if(n>=3)return'<span class="chip ca">Boa</span>';if(n>=2)return'<span class="chip ca">Moderada</span>';return'<span class="chip cr">Limitada</span>';}
+function ctc(n){if(n>=5)return'<span class="chip cg">Muito baixo</span>';if(n>=4)return'<span class="chip cg">Baixo</span>';if(n>=3)return'<span class="chip ca">Médio</span>';return'<span class="chip cr">Alto</span>';}
+function tc(n){if(n>=9)return'<span class="chip cg">Comercial</span>';if(n>=7)return'<span class="chip cb">Emergente</span>';if(n>=5)return'<span class="chip ca">Próx. geração</span>';return'<span class="chip cp">P&D</span>';}
+
+function render(){
+  const f=fil==='todas'?C:C.filter(x=>x.tipo===fil);
+  const s=[...f].sort((a,b)=>gv(b)-gv(a));
+  const max=Math.max(...s.map(gv));
+  let h='';
+  s.forEach(m=>{
+    const v=gv(m),p=Math.round(v/max*100),isSel=sel===m.id;
+    h+=`<div class="bar-item${isSel?' sel':''}" onclick="pick('${m.id}')">
+      <div class="bar-name">${m.label}${tb(m.tipo)}</div>
+      <div class="bar-outer"><div class="bar-inner" style="width:${p}%;background:${m.color};"></div></div>
+      <div class="bar-num" style="color:${m.color};">${mode==='score'?v.toFixed(1):v.toLocaleString()} ${gu()}</div>
+    </div>`;
+  });
+  document.getElementById('chart').innerHTML=h;
+  if(sel){const m=C.find(x=>x.id===sel);if(m&&f.find(x=>x.id===sel))showDetail(m);else document.getElementById('detail').innerHTML='<div class="empty">← selecione uma combinação</div>';}
+}
+
+function pick(id){sel=id;render();showDetail(C.find(x=>x.id===id));}
+
+function showDetail(m){
+  if(rc){rc.destroy();rc=null;}
+  document.getElementById('detail').innerHTML=`
+    <div class="dcard">
+      <div class="dhead">
+        <div class="ddot" style="background:${m.color};"></div>
+        <div>
+          <div class="dname">${m.label} ${tb(m.tipo)}</div>
+          <div class="dsub">Score <strong style="color:${m.color};">${m.score.toFixed(1)}/10</strong> &nbsp;·&nbsp; TRL ${m.trl}/9 ${tc(m.trl)}</div>
+        </div>
+      </div>
+      <div class="mgrid">
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.auto}</div><div class="mlbl">km</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.density}</div><div class="mlbl">Wh/kg</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.cyc.toLocaleString()}</div><div class="mlbl">ciclos</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.cr}C</div><div class="mlbl">C-rate</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.score.toFixed(1)}</div><div class="mlbl">score</div></div>
+      </div>
+      <div class="cgrid">
+        <div>
+          <div class="prow"><span class="pk">Cátodo</span><span>${m.cat}</span></div>
+          <div class="prow"><span class="pk">Ânodo</span><span>${m.ano}</span></div>
+          <div class="prow"><span class="pk">Segurança</span>${sc(m.saf)}</div>
+          <div class="prow"><span class="pk">Custo</span>${ctc(m.cost)}</div>
+          <div class="prow"><span class="pk">Carga</span>${cc(m.cr)}</div>
+        </div>
+        <div class="radar-wrap">
+          <canvas id="rc" role="img" aria-label="Radar de desempenho ${m.label}"></canvas>
+        </div>
+      </div>
+      <div class="dnotes">${m.notes}</div>
+      <div class="nbr">&#127463;&#127479; Brasil: ${m.nbr}</div>
+    </div>`;
+  const dk=matchMedia('(prefers-color-scheme:dark)').matches;
+  const gc=dk?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)',lc=dk?'#666':'#888';
+  rc=new Chart(document.getElementById('rc'),{
+    type:'radar',
+    data:{labels:['Energia','Segurança','Durabilidade','Custo','Carga'],datasets:[{data:[Math.round(Math.min(m.density/300*10,10)),m.saf*2,Math.min(Math.round(m.cyc/3000*10),10),m.cost*2,Math.min(m.cr,10)],backgroundColor:m.color+'2e',borderColor:m.color,borderWidth:2,pointBackgroundColor:m.color,pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{min:0,max:10,ticks:{display:false},grid:{color:gc},angleLines:{color:gc},pointLabels:{font:{size:9},color:lc}}}}
+  });
+}
+
+render();
+</script>
+</body>
+</html>
