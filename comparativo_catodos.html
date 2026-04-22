@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comparativo de Materiais Catódicos</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e8e8e8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #aaa;
+    transition: all 0.15s;
+  }
+
+  .btn:hover { border-color: #555; color: #ddd; }
+
+  .btn.active {
+    background: #1a3a5c;
+    color: #5ab4f0;
+    border-color: #1e4d7a;
+    font-weight: 500;
+  }
+
+  .btn-sm {
+    font-size: 12px;
+    padding: 5px 11px;
+    border-radius: 6px;
+  }
+
+  .legend-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 16px;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .badge-com    { background: #0d2e1a; color: #4ade80; border: 1px solid #166534; }
+  .badge-ng     { background: #2d1e05; color: #fbbf24; border: 1px solid #78350f; }
+  .badge-future { background: #2d0d0d; color: #f87171; border: 1px solid #7f1d1d; }
+
+  .chart-area { display: flex; flex-direction: column; gap: 0; }
+
+  .bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .bar-wrap:hover { background: #1a1a2a; }
+  .bar-wrap.sel   { background: #1a1a2a; }
+
+  .bar-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #ddd;
+    min-width: 66px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .bar-track {
+    flex: 1;
+    background: #1e1e2e;
+    border-radius: 4px;
+    height: 26px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: width 0.5s ease;
+    white-space: nowrap;
+  }
+
+  .bar-val {
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 76px;
+    text-align: right;
+  }
+
+  .detail-card {
+    background: #14141e;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    border: 1px solid #222;
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .dot-big {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .detail-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .detail-sub {
+    font-size: 12px;
+    color: #666;
+    margin-top: 3px;
+  }
+
+  .prop-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #1e1e1e;
+    font-size: 13px;
+    color: #ccc;
+  }
+
+  .prop-row:last-child { border-bottom: none; }
+
+  .prop-key { color: #666; }
+
+  .chip {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  .chip-green  { background: #0d2e1a; color: #4ade80; }
+  .chip-amber  { background: #2d1e05; color: #fbbf24; }
+  .chip-red    { background: #2d0d0d; color: #f87171; }
+
+  .trl-bar { display: flex; gap: 3px; }
+  .trl-dot { width: 13px; height: 13px; border-radius: 2px; }
+
+  .detail-notes {
+    font-size: 12px;
+    color: #666;
+    margin-top: 10px;
+    line-height: 1.7;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: #444;
+    margin-top: 14px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>Comparativo de Materiais Catódicos</h1>
+<p class="subtitle">Clique em uma barra para ver detalhes · Alterne entre métricas nos botões acima</p>
+
+<div class="controls" id="tabs">
+  <button class="btn active" onclick="setMode('autonomia',this)">Autonomia (base 40 km)</button>
+  <button class="btn" onclick="setMode('densidade',this)">Densidade energética</button>
+  <button class="btn" onclick="setMode('ciclos',this)">Vida útil (ciclos)</button>
+</div>
+
+<div class="controls" id="genbtns" style="margin-bottom:14px;">
+  <span style="font-size:12px;color:#555;align-self:center;">Filtrar:</span>
+  <button class="btn btn-sm active" onclick="setGen('todos',this)">Todos</button>
+  <button class="btn btn-sm" onclick="setGen('atual',this)">Comercial hoje</button>
+  <button class="btn btn-sm" onclick="setGen('nextgen',this)">Próxima geração</button>
+</div>
+
+<div class="legend-row">
+  <div class="legend-item"><span class="badge badge-com">comercial</span> Disponível em larga escala</div>
+  <div class="legend-item"><span class="badge badge-ng">próx. geração</span> Piloto / emergente</div>
+  <div class="legend-item"><span class="badge badge-future">futuro</span> P&D / pré-comercial</div>
+</div>
+
+<div class="chart-area" id="chart"></div>
+<div id="detail"></div>
+<p class="hint">Desenvolvido com dados de densidade energética prática (Wh/kg) e estimativa de autonomia relativa ao LFP como base.</p>
+
+<script>
+const M = [
+  { id:'lmo',    name:'LMO',      full:'Lítio Manganês Óxido (LiMn₂O₄)',              density:120, cycles:1000, cost:5, safety:4, trl:8, gen:'atual',    gain:-0.12, color:'#BA7517', notes:'Custo baixo e boa segurança. Densidade reduzida e degradação acelerada em altas temperaturas. Ainda usado em aplicações híbridas.' },
+  { id:'lfp',    name:'LFP',      full:'Lítio Ferro Fosfato (LiFePO₄)',               density:160, cycles:4000, cost:5, safety:5, trl:9, gen:'atual',    gain:0,     color:'#378ADD', notes:'Referência em segurança e longevidade. Menor densidade, mas custo baixo e vida útil superior. Domina armazenamento estacionário e EVs de entrada.' },
+  { id:'lmfp',   name:'LMFP',     full:'Lítio Manganês Ferro Fosfato',                density:190, cycles:3000, cost:5, safety:5, trl:7, gen:'atual',    gain:0.18,  color:'#1D9E75', notes:'Evolução do LFP com manganês. Tensão nominal maior (~3,7V) resultando em ~15-20% mais energia. Principal aposta da CATL para substituir o LFP.' },
+  { id:'lnmo',   name:'LNMO',     full:'Espinel alto-voltagem (LiNi₀.₅Mn₁.₅O₄)',     density:205, cycles:1200, cost:5, safety:4, trl:6, gen:'nextgen', gain:0.22,  color:'#639922', notes:'Espinel de alta tensão (~4,7V vs Li). Sem cobalto, custo baixo. Desafio: compatibilidade com eletrólitos convencionais nessa voltagem.' },
+  { id:'nmc532', name:'NMC 532',  full:'Níquel Manganês Cobalto 5:3:2',               density:210, cycles:2500, cost:3, safety:3, trl:9, gen:'atual',    gain:0.25,  color:'#534AB7', notes:'Excelente equilíbrio entre desempenho, segurança e custo. Muito usado em EVs de médio porte e ferramentas elétricas.' },
+  { id:'nmc622', name:'NMC 622',  full:'Níquel Manganês Cobalto 6:2:2',               density:220, cycles:2000, cost:3, safety:3, trl:9, gen:'atual',    gain:0.30,  color:'#7F77DD', notes:'Boa relação entre desempenho e durabilidade. Amplamente adotado em veículos elétricos de médio porte.' },
+  { id:'nmc811', name:'NMC 811',  full:'Níquel Manganês Cobalto 8:1:1',               density:250, cycles:1500, cost:2, safety:2, trl:9, gen:'atual',    gain:0.45,  color:'#D4537E', notes:'Alta densidade com menor teor de cobalto. Exige BMS sofisticado. Sensível ao supercarregamento. Padrão em EVs premium.' },
+  { id:'nmc90',  name:'NMC 90+',  full:'Níquel ultra-alto (Ni > 90%)',                density:275, cycles:1000, cost:2, safety:2, trl:5, gen:'nextgen', gain:0.50,  color:'#993556', notes:'Próximo passo do NMC 811. Reduz cobalto quase a zero, mas agrava instabilidade térmica. Em fase de piloto industrial.' },
+  { id:'lno',    name:'LiNiO₂',   full:'Lítio Níquel Óxido (LNO)',                    density:280, cycles:800,  cost:2, safety:1, trl:5, gen:'nextgen', gain:0.55,  color:'#EF9F27', notes:'Máxima densidade entre os lamelares. Instabilidade térmica severa e mistura Li/Ni. Pesquisa intensa com dopagem de W, Al e Mg.' },
+  { id:'nca',    name:'NCA',      full:'Níquel Cobalto Alumínio (NCA)',                density:270, cycles:1500, cost:2, safety:2, trl:9, gen:'atual',    gain:0.55,  color:'#885FAD', notes:'Usado pela Tesla. Excelente densidade. Alumínio melhora estabilidade versus LiNiO₂ puro, mas ainda requer gestão térmica cuidadosa.' },
+  { id:'lco',    name:'LCO',      full:'Lítio Cobalto (LiCoO₂)',                      density:200, cycles:500,  cost:1, safety:1, trl:9, gen:'atual',    gain:0.43,  color:'#D85A30', notes:'Pioneiro dos LiIon. Alta densidade, curto ciclo de vida e segurança limitada. Dominante em eletrônicos portáteis. Alto custo pelo cobalto.' },
+  { id:'llo',    name:'Li-rich',  full:'Óxidos lamelares ricos em Lítio (LLO)',        density:300, cycles:600,  cost:3, safety:2, trl:4, gen:'nextgen', gain:0.68,  color:'#5DCAA5', notes:'Capacidade teórica >250 mAh/g via redox aniônico (O²⁻). Até 20% acima dos NMC convencionais. Desafio: voltage fade ao longo dos ciclos.' },
+  { id:'drx',    name:'DRX',      full:'Sal-de-rocha desordenado (Disordered Rock Salt)',density:320,cycles:400,cost:4, safety:3, trl:3, gen:'nextgen', gain:0.75,  color:'#AFA9EC', notes:'Nova família sem Co/Ni, base de Mn. Usa redox aniônico para >300 Wh/kg. Publicado em Nature Energy 2023-2024. Sem metais raros. Desafio: escalonamento.' },
+];
+
+let mode = 'autonomia', genFilter = 'todos', selected = null;
+
+function setMode(m, el) {
+  mode = m;
+  document.querySelectorAll('#tabs .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setGen(g, el) {
+  genFilter = g;
+  document.querySelectorAll('#genbtns .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function getVal(m) {
+  if (mode === 'autonomia') return Math.round(40 * (1 + m.gain));
+  if (mode === 'densidade') return m.density;
+  return m.cycles;
+}
+
+function getUnit() {
+  return mode === 'autonomia' ? 'km' : mode === 'densidade' ? 'Wh/kg' : 'ciclos';
+}
+
+function trlLabel(n) {
+  if (n >= 7) return '<span class="badge badge-com">comercial</span>';
+  if (n >= 5) return '<span class="badge badge-ng">próx. geração</span>';
+  return '<span class="badge badge-future">futuro / P&D</span>';
+}
+
+function trlBar(n) {
+  let s = '<div class="trl-bar">';
+  for (let i = 1; i <= 9; i++) {
+    const c = i <= n ? (n >= 7 ? '#4ade80' : n >= 5 ? '#fbbf24' : '#f87171') : '#222';
+    s += `<div class="trl-dot" style="background:${c};"></div>`;
+  }
+  return s + '</div>';
+}
+
+function safetyLabel(n) {
+  if (n >= 5) return '<span class="chip chip-green">Excelente</span>';
+  if (n >= 4) return '<span class="chip chip-green">Muito boa</span>';
+  if (n >= 3) return '<span class="chip chip-amber">Boa</span>';
+  if (n >= 2) return '<span class="chip chip-amber">Moderada</span>';
+  return '<span class="chip chip-red">Limitada</span>';
+}
+
+function costLabel(n) {
+  if (n >= 5) return '<span class="chip chip-green">Muito baixo</span>';
+  if (n >= 4) return '<span class="chip chip-green">Baixo</span>';
+  if (n >= 3) return '<span class="chip chip-amber">Médio</span>';
+  if (n >= 2) return '<span class="chip chip-amber">Alto</span>';
+  return '<span class="chip chip-red">Muito alto</span>';
+}
+
+function genBadgeOf(m) {
+  if (m.trl >= 7) return '';
+  if (m.trl >= 5) return '<span class="badge badge-ng">próx. geração</span>';
+  return '<span class="badge badge-future">futuro</span>';
+}
+
+function render() {
+  const filtered = genFilter === 'todos' ? M :
+    genFilter === 'atual' ? M.filter(x => x.gen === 'atual') :
+    M.filter(x => x.gen === 'nextgen');
+
+  const sorted = [...filtered].sort((a, b) => getVal(b) - getVal(a));
+  const max = Math.max(...sorted.map(getVal));
+
+  let html = '';
+  sorted.forEach(m => {
+    const val = getVal(m);
+    const pct = Math.round((val / max) * 100);
+    const isBase = m.id === 'lfp' && mode === 'autonomia';
+    const isSel = selected === m.id;
+    html += `
+      <div class="bar-wrap${isSel?' sel':''}" onclick="selectMat('${m.id}')">
+        <div class="bar-label">${m.name}${genBadgeOf(m)}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${m.color}22;color:${m.color};">
+            ${isBase ? '← base LFP' : ''}
+          </div>
+        </div>
+        <div class="bar-val" style="color:${m.color};">${val.toLocaleString()} ${getUnit()}</div>
+      </div>`;
+  });
+
+  document.getElementById('chart').innerHTML = html;
+
+  if (selected && filtered.find(x => x.id === selected)) {
+    renderDetail(M.find(x => x.id === selected));
+  } else {
+    document.getElementById('detail').innerHTML = '';
+  }
+}
+
+function selectMat(id) {
+  selected = id;
+  render();
+  renderDetail(M.find(x => x.id === id));
+}
+
+function renderDetail(m) {
+  const gainText = m.gain > 0 ? `+${Math.round(m.gain*100)}% vs LFP` :
+    m.gain === 0 ? 'referência base' : `${Math.round(m.gain*100)}% vs LFP`;
+  document.getElementById('detail').innerHTML = `
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="dot-big" style="background:${m.color};"></div>
+        <div>
+          <div class="detail-name">${m.name} — ${m.full}</div>
+          <div class="detail-sub">${gainText} &nbsp;·&nbsp; TRL ${m.trl}/9 &nbsp;${trlLabel(m.trl)}</div>
+        </div>
+      </div>
+      <div class="prop-row"><span class="prop-key">Densidade energética</span><span>${m.density} Wh/kg</span></div>
+      <div class="prop-row"><span class="prop-key">Autonomia estimada (base 40 km)</span><span>${Math.round(40*(1+m.gain))} km</span></div>
+      <div class="prop-row"><span class="prop-key">Vida útil estimada</span><span>${m.cycles.toLocaleString()} ciclos</span></div>
+      <div class="prop-row"><span class="prop-key">Custo relativo</span>${costLabel(m.cost)}</div>
+      <div class="prop-row"><span class="prop-key">Segurança</span>${safetyLabel(m.safety)}</div>
+      <div class="prop-row"><span class="prop-key">Maturidade tecnológica (TRL)</span>${trlBar(m.trl)}</div>
+      <p class="detail-notes">${m.notes}</p>
+    </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
