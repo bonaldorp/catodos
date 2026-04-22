@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combinações Ânodo + Cátodo — Motocicleta</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e8e8e8; min-height: 100vh; padding: 24px; }
+  h1 { font-size: 20px; font-weight: 500; color: #fff; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+  .btn { background: transparent; border: 1px solid #333; border-radius: 8px; padding: 6px 13px; font-size: 12px; cursor: pointer; color: #aaa; transition: all 0.15s; }
+  .btn:hover { border-color: #555; color: #ddd; }
+  .btn.active { background: #1a3a5c; color: #5ab4f0; border-color: #1e4d7a; font-weight: 500; }
+  .btn-sm { font-size: 11px; padding: 4px 10px; border-radius: 6px; }
+  .score-info { font-size: 11px; color: #555; margin-bottom: 12px; line-height: 1.8; background: #14141e; border-left: 3px solid #1e4d7a; padding: 8px 12px; border-radius: 0 8px 8px 0; }
+  .bar-wrap { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 8px; cursor: pointer; transition: background 0.1s; margin-bottom: 5px; }
+  .bar-wrap:hover { background: #1a1a2a; }
+  .bar-wrap.sel { background: #1a1a2a; }
+  .bar-label { font-size: 11px; font-weight: 500; color: #ddd; min-width: 148px; line-height: 1.4; }
+  .bar-track { flex: 1; background: #1e1e2e; border-radius: 4px; height: 22px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 10px; font-weight: 500; transition: width 0.5s ease; }
+  .bar-val { font-size: 11px; font-weight: 600; min-width: 72px; text-align: right; }
+  .tipo-badge { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 8px; margin-left: 3px; vertical-align: middle; }
+  .detail-card { background: #14141e; border-radius: 12px; padding: 16px; margin-top: 14px; border: 1px solid #222; }
+  .detail-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .dot-big { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .detail-name { font-size: 15px; font-weight: 500; color: #fff; }
+  .detail-sub { font-size: 11px; color: #666; margin-top: 3px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+  .metric-card { background: #1a1a2a; border-radius: 8px; padding: 10px 6px; text-align: center; border: 1px solid #222; }
+  .metric-val { font-size: 17px; font-weight: 500; }
+  .metric-lbl { font-size: 10px; color: #555; margin-top: 3px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0; }
+  .prop-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #1e1e1e; font-size: 12px; color: #ccc; }
+  .prop-row:last-child { border-bottom: none; }
+  .prop-key { color: #555; }
+  .chip { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 6px; }
+  .chip-green { background: #0d2e1a; color: #4ade80; }
+  .chip-amber { background: #2d1e05; color: #fbbf24; }
+  .chip-red   { background: #2d0d0d; color: #f87171; }
+  .chip-blue  { background: #0d1e3a; color: #5ab4f0; }
+  .detail-notes { font-size: 12px; color: #666; line-height: 1.7; border-top: 1px solid #1e1e1e; padding-top: 10px; margin-top: 4px; }
+  .nota-br { font-size: 11px; color: #4ade80; background: #0d2e1a; border-radius: 6px; padding: 6px 10px; margin-top: 8px; line-height: 1.6; border: 1px solid #166534; }
+  .radar-wrap { position: relative; height: 190px; }
+  .hint { font-size: 11px; color: #333; margin-top: 16px; text-align: center; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<h1>Combinações Ânodo + Cátodo — Motocicleta</h1>
+<p class="subtitle">Score ponderado para aplicação em moto · Clique em uma combinação para ver o radar de desempenho</p>
+
+<div class="controls" id="tabs">
+  <button class="btn active" onclick="setMode('score',this)">Score para moto</button>
+  <button class="btn" onclick="setMode('autonomia',this)">Autonomia (km)</button>
+  <button class="btn" onclick="setMode('density',this)">Densidade (Wh/kg)</button>
+  <button class="btn" onclick="setMode('ciclos',this)">Vida útil (ciclos)</button>
+  <button class="btn" onclick="setMode('crate',this)">Carga rápida (C-rate)</button>
+</div>
+
+<div class="controls" id="fils" style="margin-bottom:12px;">
+  <span style="font-size:11px;color:#555;align-self:center;">Uso:</span>
+  <button class="btn btn-sm active" onclick="setFil('todas',this)">Todas</button>
+  <button class="btn btn-sm" onclick="setFil('Urbana / Delivery',this)">Urbana / Delivery</button>
+  <button class="btn btn-sm" onclick="setFil('Commuter',this)">Commuter</button>
+  <button class="btn btn-sm" onclick="setFil('Sport / Touring',this)">Sport / Touring</button>
+  <button class="btn btn-sm" onclick="setFil('Fast Charge',this)">Fast Charge</button>
+</div>
+
+<div class="score-info">
+  Score ponderado para moto:
+  &nbsp;<strong style="color:#5ab4f0;">energia/peso 25%</strong>
+  &nbsp;·&nbsp;<strong style="color:#4ade80;">segurança 25%</strong>
+  &nbsp;·&nbsp;<strong style="color:#a78bfa;">vida útil 20%</strong>
+  &nbsp;·&nbsp;<strong style="color:#fbbf24;">custo 20%</strong>
+  &nbsp;·&nbsp;<strong style="color:#f87171;">carga rápida 10%</strong>
+</div>
+
+<div id="chart"></div>
+<div id="detail"></div>
+
+<p class="hint">
+  Autonomia estimada usando LFP + Grafite = 40 km como referência.<br>
+  Niobatos (LTO, XNO, NTO) operam em tensão mais alta vs Li — reduzem autonomia mas garantem segurança e carga ultrarrápida.<br>
+  Nota Brasil: NMC 811 e NCA requerem resfriamento ativo em clima tropical.
+</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const C = [
+  {
+    id:'lfp_lto', label:'LFP + LTO', cathode:'LFP', anode:'LTO', tipo:'Urbana / Delivery',
+    density:90, autonomia:23, cycles:15000, safety:5, custo:4, crate:10, trl:9, color:'#378ADD',
+    notes:'Ultra-segura para frotas de delivery. Menor autonomia, mas 15.000 ciclos equivalem a mais de 40 anos de uso diário. Carga em ~6 min. Ideal para operações contínuas onde tempo parado tem custo direto.',
+    nota_br:'Excelente para clima tropical — LTO não sofre degradação com calor. Sem risco de thermal runaway.'
+  },
+  {
+    id:'lfp_xno', label:'LFP + XNO', cathode:'LFP', anode:'XNO', tipo:'Urbana / Delivery',
+    density:120, autonomia:30, cycles:4000, safety:5, custo:3, crate:10, trl:7, color:'#1D9E75',
+    notes:'Segurança máxima com carga ultrarrápida. XNO produzido no Brasil (CBMM + Echion — planta inaugurada em nov/2024). Leclanché XN50 já disponível comercialmente. Bom para frotas que precisam recarregar entre rotas.',
+    nota_br:'Material produzido no Brasil pela CBMM + Echion. Cadeia nacional de suprimento em desenvolvimento.'
+  },
+  {
+    id:'lmfp_nto', label:'LMFP + NTO', cathode:'LMFP', anode:'NTO', tipo:'Fast Charge',
+    density:140, autonomia:35, cycles:3000, safety:5, custo:3, crate:10, trl:6, color:'#BA7517',
+    notes:'Combina segurança do LMFP com carga ultrarrápida do NTO (TiNb₂O₇). Toshiba SCiB Nb: 80% em 10 min, 15.000 ciclos, operação de -30°C a +60°C. Autonomia reduzida mas recarga rápida compensa para uso urbano intensivo.',
+    nota_br:'Boa resistência a altas temperaturas — especialmente relevante para o Brasil.'
+  },
+  {
+    id:'nmc622_nto', label:'NMC 622 + NTO', cathode:'NMC 622', anode:'NTO', tipo:'Fast Charge',
+    density:170, autonomia:43, cycles:1500, safety:3, custo:2, crate:10, trl:6, color:'#D85A30',
+    notes:'Equilíbrio entre autonomia razoável e carga em ~10 min. NTO opera em tensão mais alta, reduzindo a tensão de célula vs grafite, mas a vantagem em velocidade de carga compensa para uso urbano intensivo. Combinação next-gen ainda em comercialização.',
+    nota_br:'NMC 622 requer gestão térmica ativa. Atenção especial em climas quentes como o Brasil.'
+  },
+  {
+    id:'lfp_grafite', label:'LFP + Grafite', cathode:'LFP', anode:'Grafite', tipo:'Commuter',
+    density:160, autonomia:40, cycles:2000, safety:4, custo:5, crate:2, trl:9, color:'#888780',
+    notes:'Referência do mercado — presente na maioria das motos elétricas acessíveis. Excelente custo-benefício, tecnologia madura e segura. Principal limitante: carga lenta (~30 min em 2C). Cadeia de fornecimento mais consolidada do setor.',
+    nota_br:'Tecnologia dominante nas motos elétricas populares no Brasil hoje. Custo mais acessível do mercado.'
+  },
+  {
+    id:'lmfp_grafite', label:'LMFP + Grafite', cathode:'LMFP', anode:'Grafite', tipo:'Commuter',
+    density:185, autonomia:46, cycles:2000, safety:4, custo:4, crate:2, trl:7, color:'#0F6E56',
+    notes:'Evolução direta do LFP com ~15% mais autonomia mantendo segurança e longevidade. Principal aposta da CATL para substituir LFP gradualmente. Deve ser o padrão das motos commuter premium nos próximos 2-3 anos.',
+    nota_br:'Segura para uso em clima tropical. Excelente opção para o mercado brasileiro de commuter.'
+  },
+  {
+    id:'lmfp_grsi5', label:'LMFP + Si/Grafite', cathode:'LMFP', anode:'Grafite+Si 5%', tipo:'Commuter',
+    density:200, autonomia:50, cycles:1500, safety:4, custo:4, crate:2, trl:7, color:'#639922',
+    notes:'Melhor combinação para commuter premium: LMFP mantém segurança enquanto Si/Grafite adiciona capacidade. Ciclos excelentes para uso diário. Provavelmente o padrão das motos commuter de alto desempenho nos próximos anos.',
+    nota_br:'Recomendação top para o mercado brasileiro de commuter — segura, eficiente e de custo razoável.'
+  },
+  {
+    id:'nmc622_grafite', label:'NMC 622 + Grafite', cathode:'NMC 622', anode:'Grafite', tipo:'Sport / Touring',
+    density:210, autonomia:52, cycles:1500, safety:3, custo:3, crate:2, trl:9, color:'#7F77DD',
+    notes:'Padrão das motos de médio-alto desempenho. Boa autonomia com custo e segurança razoáveis. Requer BMS adequado e evitar cargas frequentes acima de 80%. Exige gestão térmica — peso extra relevante para motos leves.',
+    nota_br:'Requer resfriamento ativo em climas quentes. Atenção ao uso no Brasil sem gestão térmica adequada.'
+  },
+  {
+    id:'nmc622_grsi5', label:'NMC 622 + Si/Grafite', cathode:'NMC 622', anode:'Grafite+Si 5%', tipo:'Sport / Touring',
+    density:230, autonomia:58, cycles:1200, safety:3, custo:3, crate:2, trl:8, color:'#534AB7',
+    notes:'Boa escolha para sport touring. +10% de autonomia vs NMC puro com impacto moderado na durabilidade. Usado em motos premium como Energica. Requer atenção ao gerenciamento de cargas para preservar o ânodo de Si.',
+    nota_br:'Gestão térmica ativa obrigatória em clima tropical para evitar degradação acelerada.'
+  },
+  {
+    id:'nmc811_grafite', label:'NMC 811 + Grafite', cathode:'NMC 811', anode:'Grafite', tipo:'Sport / Touring',
+    density:250, autonomia:62, cycles:1200, safety:2, custo:2, crate:2, trl:9, color:'#D4537E',
+    notes:'Alta autonomia para moto esportiva. Exige BMS sofisticado e gestão térmica robusta. Não recomendado para climas tropicais sem resfriamento ativo. Custo elevado e vida útil menor vs NMC 622.',
+    nota_br:'Risco elevado de degradação acelerada sem resfriamento ativo. Uso restrito no Brasil sem sistema térmico dedicado.'
+  },
+  {
+    id:'nca_grafite', label:'NCA + Grafite', cathode:'NCA', anode:'Grafite', tipo:'Sport / Touring',
+    density:265, autonomia:66, cycles:1200, safety:2, custo:2, crate:2, trl:9, color:'#885FAD',
+    notes:'Escolha das motos de alta performance. Excelente energia específica. Sensível à temperatura — em clima tropical pode degradar mais rápido sem gestão térmica ativa. Opção premium com menor tolerância a erros de gestão.',
+    nota_br:'Não recomendado para uso no Brasil sem sistema de resfriamento ativo. Risco de degradação prematura.'
+  },
+  {
+    id:'nmc811_grsi5', label:'NMC 811 + Si/Grafite', cathode:'NMC 811', anode:'Grafite+Si 5%', tipo:'Sport / Touring',
+    density:270, autonomia:67, cycles:1000, safety:2, custo:2, crate:2, trl:8, color:'#993556',
+    notes:'Máxima autonomia entre combinações comerciais. Complexidade de gestão elevada — carregador inteligente obrigatório. Para motos touring de longa distância onde peso e custo são secundários à autonomia.',
+    nota_br:'Alta complexidade e custo. Resfriamento ativo obrigatório. Uso restrito a aplicações premium no Brasil.'
+  },
+];
+
+const TIPO_COLORS = {
+  'Urbana / Delivery': ['#0d1e3a','#5ab4f0'],
+  'Commuter':          ['#0d2e1a','#4ade80'],
+  'Sport / Touring':   ['#2d1e05','#fbbf24'],
+  'Fast Charge':       ['#2d0d0d','#f87171'],
+};
+
+function calcScore(m) {
+  const dn    = Math.min(m.density / 300 * 10, 10);
+  const sn    = m.safety * 2;
+  const cn    = Math.min(m.cycles / 3000 * 10, 10);
+  const costn = m.custo * 2;
+  const crn   = Math.min(m.crate, 10);
+  return Math.round((dn*0.25 + sn*0.25 + cn*0.20 + costn*0.20 + crn*0.10) * 10) / 10;
+}
+C.forEach(m => { m.score = calcScore(m); });
+
+let mode = 'score', fil = 'todas', selected = null, radarChart = null;
+
+function setMode(m, el) {
+  mode = m;
+  document.querySelectorAll('#tabs .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function setFil(f, el) {
+  fil = f;
+  document.querySelectorAll('#fils .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function getVal(m) {
+  if (mode === 'score')    return m.score;
+  if (mode === 'autonomia') return m.autonomia;
+  if (mode === 'density')  return m.density;
+  if (mode === 'ciclos')   return m.cycles;
+  return m.crate;
+}
+function getUnit() {
+  if (mode === 'score')    return '/10';
+  if (mode === 'autonomia') return 'km';
+  if (mode === 'density')  return 'Wh/kg';
+  if (mode === 'ciclos')   return 'ciclos';
+  return 'C';
+}
+
+function tipoBadge(t) {
+  const [bg, co] = TIPO_COLORS[t] || ['#1e1e2e','#aaa'];
+  return `<span class="tipo-badge" style="background:${bg};color:${co};">${t}</span>`;
+}
+function crateChip(c) {
+  if (c >= 10) return `<span class="chip chip-green">${c}C (~6 min)</span>`;
+  if (c >= 5)  return `<span class="chip chip-amber">${c}C (~12 min)</span>`;
+  return `<span class="chip chip-amber">${c}C (~30 min)</span>`;
+}
+function safetyChip(n) {
+  if (n >= 5) return '<span class="chip chip-green">Excelente</span>';
+  if (n >= 4) return '<span class="chip chip-green">Muito boa</span>';
+  if (n >= 3) return '<span class="chip chip-amber">Boa</span>';
+  return '<span class="chip chip-red">Moderada</span>';
+}
+function custoChip(n) {
+  if (n >= 5) return '<span class="chip chip-green">Muito baixo</span>';
+  if (n >= 4) return '<span class="chip chip-green">Baixo</span>';
+  if (n >= 3) return '<span class="chip chip-amber">Médio</span>';
+  return '<span class="chip chip-red">Alto</span>';
+}
+function trlChip(n) {
+  if (n >= 9) return '<span class="chip chip-green">Comercial</span>';
+  if (n >= 7) return '<span class="chip chip-blue">Comercial emergente</span>';
+  if (n >= 5) return '<span class="chip chip-amber">Próx. geração</span>';
+  return '<span class="chip chip-red">P&D</span>';
+}
+
+function render() {
+  const filtered = fil === 'todas' ? C : C.filter(x => x.tipo === fil);
+  const sorted   = [...filtered].sort((a, b) => getVal(b) - getVal(a));
+  const max      = Math.max(...sorted.map(getVal));
+  let html = '';
+  sorted.forEach(m => {
+    const val  = getVal(m);
+    const pct  = Math.round((val / max) * 100);
+    const isSel = selected === m.id;
+    html += `
+      <div class="bar-wrap${isSel ? ' sel' : ''}" onclick="selectCombo('${m.id}')">
+        <div class="bar-label">${m.label}${tipoBadge(m.tipo)}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${pct}%;background:${m.color}22;color:${m.color};"></div>
+        </div>
+        <div class="bar-val" style="color:${m.color};">${mode === 'score' ? val.toFixed(1) : val.toLocaleString()} ${getUnit()}</div>
+      </div>`;
+  });
+  document.getElementById('chart').innerHTML = html;
+  if (selected) {
+    const m = C.find(x => x.id === selected);
+    if (m && filtered.find(x => x.id === selected)) renderDetail(m);
+    else document.getElementById('detail').innerHTML = '';
+  }
+}
+
+function selectCombo(id) {
+  selected = id;
+  render();
+  renderDetail(C.find(x => x.id === id));
+}
+
+function renderDetail(m) {
+  if (radarChart) { radarChart.destroy(); radarChart = null; }
+
+  document.getElementById('detail').innerHTML = `
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="dot-big" style="background:${m.color};"></div>
+        <div>
+          <div class="detail-name">${m.label}</div>
+          <div class="detail-sub">${m.tipo} &nbsp;·&nbsp; Score: <strong style="color:${m.color};">${m.score.toFixed(1)}/10</strong> &nbsp;·&nbsp; TRL ${m.trl}/9 &nbsp;${trlChip(m.trl)}</div>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-val" style="color:${m.color};">${m.autonomia}</div>
+          <div class="metric-lbl">km autonomia</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:${m.color};">${m.density}</div>
+          <div class="metric-lbl">Wh/kg</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:${m.color};">${m.cycles.toLocaleString()}</div>
+          <div class="metric-lbl">ciclos</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:${m.color};">${m.crate}C</div>
+          <div class="metric-lbl">C-rate máx</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val" style="color:${m.color};">${m.score.toFixed(1)}</div>
+          <div class="metric-lbl">score moto</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <div class="prop-row"><span class="prop-key">Cátodo</span><span>${m.cathode}</span></div>
+          <div class="prop-row"><span class="prop-key">Ânodo</span><span>${m.anode}</span></div>
+          <div class="prop-row"><span class="prop-key">Segurança</span>${safetyChip(m.safety)}</div>
+          <div class="prop-row"><span class="prop-key">Custo relativo</span>${custoChip(m.custo)}</div>
+          <div class="prop-row"><span class="prop-key">Carga máxima</span>${crateChip(m.crate)}</div>
+          <div class="prop-row"><span class="prop-key">Maturidade</span>${trlChip(m.trl)}</div>
+        </div>
+        <div class="radar-wrap">
+          <canvas id="radarCanvas" role="img"
+            aria-label="Radar de desempenho para ${m.label}: energia ${Math.round(m.density/300*10)}, segurança ${m.safety*2}, durabilidade ${Math.min(Math.round(m.cycles/3000*10),10)}, custo ${m.custo*2}, carga ${Math.min(m.crate,10)}.">
+          </canvas>
+        </div>
+      </div>
+
+      <div class="detail-notes">${m.notes}</div>
+      <div class="nota-br">&#127463;&#127479; Brasil: ${m.nota_br}</div>
+    </div>`;
+
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+  const labelColor = isDark ? '#888' : '#666';
+
+  const dn    = Math.round(Math.min(m.density / 300 * 10, 10));
+  const sn    = m.safety * 2;
+  const cn    = Math.min(Math.round(m.cycles / 3000 * 10), 10);
+  const costn = m.custo * 2;
+  const crn   = Math.min(m.crate, 10);
+
+  radarChart = new Chart(document.getElementById('radarCanvas'), {
+    type: 'radar',
+    data: {
+      labels: ['Energia/peso', 'Segurança', 'Durabilidade', 'Custo', 'Carga rápida'],
+      datasets: [{
+        data: [dn, sn, cn, costn, crn],
+        backgroundColor: m.color + '33',
+        borderColor: m.color,
+        borderWidth: 2,
+        pointBackgroundColor: m.color,
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 10,
+          ticks: { display: false, stepSize: 2 },
+          grid: { color: gridColor },
+          angleLines: { color: gridColor },
+          pointLabels: { font: { size: 9 }, color: labelColor },
+        }
+      }
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
