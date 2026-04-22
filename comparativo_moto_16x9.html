@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combinações Ânodo + Cátodo — Motocicleta</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e8e8e8;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px 12px;
+  }
+
+  .top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+
+  .title h1 { font-size: 16px; font-weight: 500; color: #fff; }
+  .title p  { font-size: 10px; color: #444; margin-top: 2px; }
+
+  .ctrl-row { display: flex; flex-wrap: wrap; gap: 4px; }
+
+  .btn {
+    background: #1a1a2e;
+    border: 1px solid #2a2a3e;
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-size: 10px;
+    cursor: pointer;
+    color: #777;
+    transition: all 0.12s;
+    white-space: nowrap;
+  }
+  .btn:hover { color: #ccc; border-color: #444; }
+  .btn.active { background: #1a3a5c; color: #5ab4f0; border-color: #1e4d7a; font-weight: 600; }
+  .btn-xs { font-size: 9px; padding: 3px 8px; }
+
+  .fil-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+  }
+  .fil-label { font-size: 9px; color: #444; }
+
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .left {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .score-hint {
+    font-size: 9px;
+    color: #3a3a5a;
+    margin-bottom: 7px;
+    flex-shrink: 0;
+    line-height: 1.6;
+  }
+
+  .bars {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .bars::-webkit-scrollbar { width: 3px; }
+  .bars::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+
+  .bar-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: background 0.1s;
+  }
+  .bar-item:hover { background: #1a1a2a; }
+  .bar-item.sel { background: #1c1c2e; outline: 1px solid #2a2a4a; }
+
+  .bar-name {
+    font-size: 10px;
+    color: #bbb;
+    font-weight: 500;
+    min-width: 116px;
+    line-height: 1.3;
+  }
+
+  .bar-outer {
+    flex: 1;
+    background: #1e1e2e;
+    border-radius: 3px;
+    height: 16px;
+    overflow: hidden;
+  }
+  .bar-inner { height: 100%; border-radius: 3px; }
+
+  .bar-num {
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 60px;
+    text-align: right;
+  }
+
+  .tbadge {
+    display: inline-block;
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 5px;
+    margin-left: 2px;
+    vertical-align: middle;
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .empty {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2a2a3a;
+    font-size: 11px;
+    border: 1px dashed #1e1e2e;
+    border-radius: 8px;
+  }
+
+  .dcard {
+    background: #14141e;
+    border-radius: 8px;
+    border: 1px solid #222;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    overflow-y: auto;
+  }
+  .dcard::-webkit-scrollbar { width: 3px; }
+  .dcard::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
+
+  .dhead { display: flex; align-items: flex-start; gap: 8px; }
+  .ddot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .dname { font-size: 13px; font-weight: 500; color: #fff; }
+  .dsub { font-size: 10px; color: #555; margin-top: 2px; }
+
+  .mgrid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0,1fr));
+    gap: 5px;
+  }
+  .mcard {
+    background: #1a1a2a;
+    border-radius: 5px;
+    padding: 6px 3px;
+    text-align: center;
+    border: 1px solid #1e1e2e;
+  }
+  .mval { font-size: 14px; font-weight: 500; }
+  .mlbl { font-size: 8px; color: #444; margin-top: 1px; }
+
+  .cgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .prow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    border-bottom: 1px solid #1a1a2a;
+    font-size: 10px;
+    color: #aaa;
+  }
+  .prow:last-child { border-bottom: none; }
+  .pk { color: #444; }
+
+  .chip { display: inline-block; font-size: 9px; padding: 1px 5px; border-radius: 4px; }
+  .cg { background: #0d2e1a; color: #4ade80; }
+  .ca { background: #2d1e05; color: #fbbf24; }
+  .cr { background: #2d0d0d; color: #f87171; }
+  .cb { background: #0d1e3a; color: #5ab4f0; }
+
+  .radar-wrap { position: relative; height: 148px; }
+
+  .dnotes {
+    font-size: 9px;
+    color: #555;
+    line-height: 1.65;
+    border-top: 1px solid #1a1a2a;
+    padding-top: 7px;
+  }
+
+  .nbr {
+    font-size: 9px;
+    color: #4ade80;
+    background: #0d2e1a;
+    border-radius: 4px;
+    padding: 5px 9px;
+    border: 1px solid #166534;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="title">
+    <h1>Combinações Ânodo + Cátodo — Motocicleta</h1>
+    <p>Clique em uma combinação para ver o radar de desempenho</p>
+  </div>
+  <div class="ctrl-row" id="tabs">
+    <button class="btn active" onclick="setMode('score',this)">Score moto</button>
+    <button class="btn" onclick="setMode('autonomia',this)">Autonomia</button>
+    <button class="btn" onclick="setMode('density',this)">Wh/kg</button>
+    <button class="btn" onclick="setMode('ciclos',this)">Ciclos</button>
+    <button class="btn" onclick="setMode('crate',this)">C-rate</button>
+  </div>
+</div>
+
+<div class="fil-row">
+  <span class="fil-label">Uso:</span>
+  <div class="ctrl-row" id="fils">
+    <button class="btn btn-xs active" onclick="setFil('todas',this)">Todas</button>
+    <button class="btn btn-xs" onclick="setFil('Urbana / Delivery',this)">Urbana / Delivery</button>
+    <button class="btn btn-xs" onclick="setFil('Commuter',this)">Commuter</button>
+    <button class="btn btn-xs" onclick="setFil('Sport / Touring',this)">Sport / Touring</button>
+    <button class="btn btn-xs" onclick="setFil('Fast Charge',this)">Fast Charge</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="left">
+    <div class="score-hint">
+      Score ponderado: energia/peso 25% · segurança 25% · durabilidade 20% · custo 20% · carga rápida 10%
+    </div>
+    <div class="bars" id="chart"></div>
+  </div>
+  <div class="right">
+    <div id="detail"><div class="empty">← selecione uma combinação</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TC = {
+  'Urbana / Delivery': ['#0d1e3a','#5ab4f0'],
+  'Commuter':          ['#0d2e1a','#4ade80'],
+  'Sport / Touring':   ['#2d1e05','#fbbf24'],
+  'Fast Charge':       ['#2d0d0d','#f87171'],
+};
+
+const C = [
+  { id:'lfp_lto',        label:'LFP + LTO',           cat:'LFP',     ano:'LTO',           tipo:'Urbana / Delivery', density:90,  auto:23, cyc:15000, saf:5, cost:4, cr:10, trl:9, color:'#378ADD', notes:'Ultra-segura para frotas de delivery. 15.000 ciclos = mais de 40 anos de uso diário. Carga em ~6 min. Ideal onde tempo parado tem custo direto.',                               nbr:'Excelente para clima tropical. LTO não degrada com calor. Sem risco de thermal runaway.' },
+  { id:'lfp_xno',        label:'LFP + XNO',            cat:'LFP',     ano:'XNO',           tipo:'Urbana / Delivery', density:120, auto:30, cyc:4000,  saf:5, cost:3, cr:10, trl:7, color:'#1D9E75', notes:'Segurança máxima com carga ultrarrápida. XNO produzido no Brasil (CBMM + Echion, nov/2024). Leclanché XN50 disponível comercialmente.',                                          nbr:'Material produzido no Brasil pela CBMM + Echion. Cadeia nacional em desenvolvimento.' },
+  { id:'lmfp_nto',       label:'LMFP + NTO',           cat:'LMFP',    ano:'NTO',           tipo:'Fast Charge',       density:140, auto:35, cyc:3000,  saf:5, cost:3, cr:10, trl:6, color:'#BA7517', notes:'Segurança do LMFP com carga ultrarrápida do NTO. Toshiba SCiB Nb: 80% em 10 min, 15.000 ciclos, -30°C a +60°C. Recarga rápida compensa autonomia reduzida.',                 nbr:'Boa resistência a altas temperaturas — relevante no clima brasileiro.' },
+  { id:'nmc622_nto',     label:'NMC 622 + NTO',         cat:'NMC 622', ano:'NTO',           tipo:'Fast Charge',       density:170, auto:43, cyc:1500,  saf:3, cost:2, cr:10, trl:6, color:'#D85A30', notes:'Autonomia razoável com carga em ~10 min. Combinação next-gen em fase de comercialização.',                                                                                       nbr:'NMC 622 requer gestão térmica ativa. Atenção em climas quentes como o Brasil.' },
+  { id:'lfp_grafite',    label:'LFP + Grafite',          cat:'LFP',     ano:'Grafite',       tipo:'Commuter',          density:160, auto:40, cyc:2000,  saf:4, cost:5, cr:2,  trl:9, color:'#888780', notes:'Referência do mercado. Tecnologia madura, segura e de baixo custo. Principal limitante: carga lenta (~30 min em 2C).',                                                         nbr:'Tecnologia dominante nas motos elétricas populares no Brasil. Custo mais acessível.' },
+  { id:'lmfp_grafite',   label:'LMFP + Grafite',         cat:'LMFP',    ano:'Grafite',       tipo:'Commuter',          density:185, auto:46, cyc:2000,  saf:4, cost:4, cr:2,  trl:7, color:'#0F6E56', notes:'Evolução do LFP com ~15% mais autonomia mantendo segurança e longevidade. Principal aposta da CATL para commuters.',                                                           nbr:'Segura em clima tropical. Excelente opção para o mercado brasileiro de commuter.' },
+  { id:'lmfp_grsi5',     label:'LMFP + Si/Grafite',      cat:'LMFP',    ano:'Grafite+Si 5%', tipo:'Commuter',          density:200, auto:50, cyc:1500,  saf:4, cost:4, cr:2,  trl:7, color:'#639922', notes:'Melhor combinação para commuter premium: segurança do LMFP + capacidade extra do Si/Grafite. Padrão das motos commuter de alto desempenho nos próximos anos.',              nbr:'Recomendação top para o Brasil — segura, eficiente e custo razoável.' },
+  { id:'nmc622_grafite', label:'NMC 622 + Grafite',       cat:'NMC 622', ano:'Grafite',       tipo:'Sport / Touring',   density:210, auto:52, cyc:1500,  saf:3, cost:3, cr:2,  trl:9, color:'#7F77DD', notes:'Padrão das motos de médio-alto desempenho. Requer BMS adequado e gestão térmica. Evitar cargas frequentes acima de 80%.',                                                    nbr:'Requer resfriamento ativo em climas quentes. Atenção sem gestão térmica no Brasil.' },
+  { id:'nmc622_grsi5',   label:'NMC 622 + Si/Grafite',    cat:'NMC 622', ano:'Grafite+Si 5%', tipo:'Sport / Touring',   density:230, auto:58, cyc:1200,  saf:3, cost:3, cr:2,  trl:8, color:'#534AB7', notes:'+10% de autonomia vs NMC puro com impacto moderado na durabilidade. Usado em motos premium como Energica.',                                                                  nbr:'Gestão térmica ativa obrigatória em clima tropical para evitar degradação.' },
+  { id:'nmc811_grafite', label:'NMC 811 + Grafite',       cat:'NMC 811', ano:'Grafite',       tipo:'Sport / Touring',   density:250, auto:62, cyc:1200,  saf:2, cost:2, cr:2,  trl:9, color:'#D4537E', notes:'Alta autonomia para esportivas. Exige BMS sofisticado e gestão térmica robusta. Custo elevado e vida útil menor vs NMC 622.',                                               nbr:'Risco de degradação sem resfriamento ativo. Uso restrito no Brasil.' },
+  { id:'nca_grafite',    label:'NCA + Grafite',            cat:'NCA',     ano:'Grafite',       tipo:'Sport / Touring',   density:265, auto:66, cyc:1200,  saf:2, cost:2, cr:2,  trl:9, color:'#885FAD', notes:'Alta performance. Excelente energia específica. Sensível à temperatura — requer gestão térmica ativa em climas tropicais.',                                                  nbr:'Não recomendado no Brasil sem resfriamento ativo. Risco de degradação prematura.' },
+  { id:'nmc811_grsi5',   label:'NMC 811 + Si/Grafite',    cat:'NMC 811', ano:'Grafite+Si 5%', tipo:'Sport / Touring',   density:270, auto:67, cyc:1000,  saf:2, cost:2, cr:2,  trl:8, color:'#993556', notes:'Máxima autonomia entre combinações comerciais. Complexidade elevada — carregador inteligente obrigatório. Para touring onde autonomia supera custo.',                       nbr:'Resfriamento obrigatório. Uso restrito a aplicações premium no Brasil.' },
+];
+
+function calcScore(m) {
+  const dn = Math.min(m.density/300*10, 10);
+  const sn = m.saf * 2;
+  const cn = Math.min(m.cyc/3000*10, 10);
+  const co = m.cost * 2;
+  const cr = Math.min(m.cr, 10);
+  return Math.round((dn*0.25 + sn*0.25 + cn*0.20 + co*0.20 + cr*0.10) * 10) / 10;
+}
+C.forEach(m => m.score = calcScore(m));
+
+let mode = 'score', fil = 'todas', sel = null, rc = null;
+
+function setMode(m, el) {
+  mode = m;
+  document.querySelectorAll('#tabs .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function setFil(f, el) {
+  fil = f;
+  document.querySelectorAll('#fils .btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function gv(m) {
+  if (mode==='score')     return m.score;
+  if (mode==='autonomia') return m.auto;
+  if (mode==='density')   return m.density;
+  if (mode==='ciclos')    return m.cyc;
+  return m.cr;
+}
+function gu() {
+  if (mode==='score')     return '/10';
+  if (mode==='autonomia') return 'km';
+  if (mode==='density')   return 'Wh/kg';
+  if (mode==='ciclos')    return 'ciclos';
+  return 'C';
+}
+function tb(t) { const [bg,co]=TC[t]||['#222','#888']; return `<span class="tbadge" style="background:${bg};color:${co};">${t}</span>`; }
+function cc(c) { if(c>=10) return `<span class="chip cg">${c}C ~6 min</span>`; if(c>=5) return `<span class="chip ca">${c}C ~12 min</span>`; return `<span class="chip ca">${c}C ~30 min</span>`; }
+function sc(n) { if(n>=5) return '<span class="chip cg">Excelente</span>'; if(n>=4) return '<span class="chip cg">Muito boa</span>'; if(n>=3) return '<span class="chip ca">Boa</span>'; return '<span class="chip cr">Moderada</span>'; }
+function ctc(n){ if(n>=5) return '<span class="chip cg">Muito baixo</span>'; if(n>=4) return '<span class="chip cg">Baixo</span>'; if(n>=3) return '<span class="chip ca">Médio</span>'; return '<span class="chip cr">Alto</span>'; }
+function tc(n) { if(n>=9) return '<span class="chip cg">Comercial</span>'; if(n>=7) return '<span class="chip cb">Emergente</span>'; if(n>=5) return '<span class="chip ca">Próx. geração</span>'; return '<span class="chip cr">P&D</span>'; }
+
+function render() {
+  const f   = fil==='todas' ? C : C.filter(x=>x.tipo===fil);
+  const s   = [...f].sort((a,b)=>gv(b)-gv(a));
+  const max = Math.max(...s.map(gv));
+  let h = '';
+  s.forEach(m => {
+    const v=gv(m), p=Math.round(v/max*100), isSel=sel===m.id;
+    h += `<div class="bar-item${isSel?' sel':''}" onclick="pick('${m.id}')">
+      <div class="bar-name">${m.label}${tb(m.tipo)}</div>
+      <div class="bar-outer"><div class="bar-inner" style="width:${p}%;background:${m.color};"></div></div>
+      <div class="bar-num" style="color:${m.color};">${mode==='score'?v.toFixed(1):v.toLocaleString()} ${gu()}</div>
+    </div>`;
+  });
+  document.getElementById('chart').innerHTML = h;
+  if (sel) {
+    const m = C.find(x=>x.id===sel);
+    if (m && f.find(x=>x.id===sel)) showDetail(m);
+    else document.getElementById('detail').innerHTML = '<div class="empty">← selecione uma combinação</div>';
+  }
+}
+
+function pick(id) { sel=id; render(); showDetail(C.find(x=>x.id===id)); }
+
+function showDetail(m) {
+  if (rc) { rc.destroy(); rc=null; }
+  document.getElementById('detail').innerHTML = `
+    <div class="dcard">
+      <div class="dhead">
+        <div class="ddot" style="background:${m.color};"></div>
+        <div>
+          <div class="dname">${m.label} ${tb(m.tipo)}</div>
+          <div class="dsub">Score <strong style="color:${m.color};">${m.score.toFixed(1)}/10</strong> &nbsp;·&nbsp; TRL ${m.trl}/9 ${tc(m.trl)}</div>
+        </div>
+      </div>
+      <div class="mgrid">
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.auto}</div><div class="mlbl">km</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.density}</div><div class="mlbl">Wh/kg</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.cyc.toLocaleString()}</div><div class="mlbl">ciclos</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.cr}C</div><div class="mlbl">C-rate</div></div>
+        <div class="mcard"><div class="mval" style="color:${m.color};">${m.score.toFixed(1)}</div><div class="mlbl">score</div></div>
+      </div>
+      <div class="cgrid">
+        <div>
+          <div class="prow"><span class="pk">Cátodo</span><span>${m.cat}</span></div>
+          <div class="prow"><span class="pk">Ânodo</span><span>${m.ano}</span></div>
+          <div class="prow"><span class="pk">Segurança</span>${sc(m.saf)}</div>
+          <div class="prow"><span class="pk">Custo</span>${ctc(m.cost)}</div>
+          <div class="prow"><span class="pk">Carga</span>${cc(m.cr)}</div>
+        </div>
+        <div class="radar-wrap">
+          <canvas id="rc" role="img" aria-label="Radar de desempenho ${m.label}"></canvas>
+        </div>
+      </div>
+      <div class="dnotes">${m.notes}</div>
+      <div class="nbr">&#127463;&#127479; Brasil: ${m.nbr}</div>
+    </div>`;
+
+  const dk = matchMedia('(prefers-color-scheme: dark)').matches;
+  const gc = dk ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+  const lc = dk ? '#666' : '#888';
+  rc = new Chart(document.getElementById('rc'), {
+    type: 'radar',
+    data: {
+      labels: ['Energia','Segurança','Durabilidade','Custo','Carga'],
+      datasets: [{
+        data: [
+          Math.round(Math.min(m.density/300*10,10)),
+          m.saf*2,
+          Math.min(Math.round(m.cyc/3000*10),10),
+          m.cost*2,
+          Math.min(m.cr,10)
+        ],
+        backgroundColor: m.color+'2e',
+        borderColor: m.color,
+        borderWidth: 2,
+        pointBackgroundColor: m.color,
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        r: {
+          min: 0, max: 10,
+          ticks: { display: false },
+          grid: { color: gc },
+          angleLines: { color: gc },
+          pointLabels: { font: { size: 9 }, color: lc }
+        }
+      }
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
